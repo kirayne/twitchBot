@@ -138,8 +138,30 @@ function bitsHandler(user){
   } else{
       cheeredBits[user] += user.bits;
     }
+}
 
+function getRolls(user){
   return gambaRolls = parseInt(cheeredBits[user]/500);
+}
+
+function roll(){
+
+      commandInProcess = true; //Flag to not append users who havent rolled
+      client.say(channel, `@${user.username} 69 today? PauseChamp You rolled a... PauseChamp`);
+      setTimeout(() => {
+
+        commandInProcess = false;
+        const roll = Math.floor(Math.random() * 1000) + 1; // generate a random number between 1 and 1000
+        if (roll === 69) {
+          return client.say(channel, `@${user.username} You rolled a 69... Oh no natsuPanic`);
+        }
+        
+        client.say(
+          channel,
+          `@${user.username} natsuLaughing better luck tomorrow nerd natsuHehehehehe you rolled a ${roll}!`
+          );
+          }, 1500)
+          
 }
 
 client.on('message', (channel, user, message, self) => {
@@ -164,30 +186,23 @@ client.on('message', (channel, user, message, self) => {
 
   if (message.toLowerCase().startsWith("!roll")) {
     
-    const gambaRolls = bitsHandler(userstate); // Get the number of gamba rolls from bitsHandler
-    if (usedCommand.has(user.username) && gambaRolls<=0 && user.username !== 'natsubun') {
+    const rolls = getRolls(userstate); // Get the number of rolls
+
+    if (usedCommand.has(user.username) && rolls <= 0 && user.username !== 'natsubun') {
       return client.say(
         channel,
-        `${user.username}, you already rolled the dice in this stream!`
+        `${user.username}, you have no rolls left natsuLaughing `
       );
     }
-      commandInProcess = true; //Flag to not append users who havent rolled
-      usedCommand.add(user.username);
-      client.say(channel, `@${user.username} 69 today? PauseChamp You rolled a... PauseChamp`);
-      setTimeout(() => {
-        commandInProcess = false;
-        const roll = Math.floor(Math.random() * 1000) + 1; // generate a random number between 1 and 1000
-        if (roll === 69) {
-          return client.say(channel, `@${user.username} You rolled a 69... Oh no natsuPanic`);
-        }
-        client.say(
-          channel,
-          `@${user.username} natsuLaughing better luck tomorrow nerd natsuHehehehehe you rolled a ${roll}!`
-          );
-          
-        bitsHandler({ user: userstate.user, bits: -500 });
-  
-      }, 1500);
+
+    if (rolls > 0){
+      bitsHandler({ user: userstate.user, bits: -500 });
+      roll()
+      return
+    }
+
+    usedCommand.add(user.username);
+    roll ();
     
   }
 
