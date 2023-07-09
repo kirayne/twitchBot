@@ -6,6 +6,7 @@ const tmi = require('tmi.js'), { channel, username, password } = require('./sett
 const markovChain = {};
 const usedCommand = new Set();
 let commandInProcess = false;
+const cheeredBits = {};
 //const blacklistTrie = new Trie();
 
 
@@ -123,6 +124,24 @@ client.on('connected', () => {
   client.say(channel, 'Bot connected')
 });
 
+
+//when someone cheer
+client.on("cheer", (channel, userstate, message) => {
+
+  bitsHandler(userstate);
+  
+});
+
+function bitsHandler(user){
+  if (cheeredBits[user] === undefined){
+    cheeredBits[user] = user.bits;
+  } else{
+      cheeredBits[user] += user.bits;
+    }
+
+  return gambaRolls = parseInt(cheeredBits[user]/500);
+}
+
 client.on('message', (channel, user, message, self) => {
   //if message came from bot, we ignore
   if (self) return;
@@ -144,7 +163,9 @@ client.on('message', (channel, user, message, self) => {
   }
 
   if (message.toLowerCase().startsWith("!roll")) {
-    if (usedCommand.has(user.username) && user.username !== 'natsubun') {
+    
+    const gambaRolls = bitsHandler(userstate); // Get the number of gamba rolls from bitsHandler
+    if (usedCommand.has(user.username) && gambaRolls<=0 && user.username !== 'natsubun') {
       return client.say(
         channel,
         `${user.username}, you already rolled the dice in this stream!`
@@ -163,7 +184,9 @@ client.on('message', (channel, user, message, self) => {
           channel,
           `@${user.username} natsuLaughing better luck tomorrow nerd natsuHehehehehe you rolled a ${roll}!`
           );
-        
+          
+        bitsHandler({ user: userstate.user, bits: -500 });
+  
       }, 1500);
     
   }
