@@ -1,14 +1,14 @@
 const tmi = require("tmi.js"),
-  { channel, username, password } = require("./settings.json");
-//const fs = require('fs'); //tp read the json file
-//const Trie = require('./Trie');
-//const jsonfile = require('jsonfile')
+  { channel, username } = require("./settings.json");
+const ballAnswers = require("./ballAnswers");
+const { connect, updateBits, getBits } = require("./server");
 
 const markovChain = {};
-const usedCommand = new Set();
 let commandInProcess = false;
-const cheeredBits = {};
-//const blacklistTrie = new Trie();
+
+const usedCommand = new Set();
+const extraRollCost = 1000;
+const rollRange = 1000;
 
 const options = {
   options: { debug: true },
@@ -17,188 +17,113 @@ const options = {
     secure: true,
   },
   identity: {
-    username,
-    password,
+    username: `${process.env.TWITCH_USERNAME}`,
+    passsowrd: `${process.env.TWITCH_TOKEN}`,
   },
   channels: [channel],
 };
 
-// // Read the JSON file
-// const rawData = fs.readFileSync('blacklist.json');
-// const blacklist = JSON.parse(rawData);
-
-// //Insert words from the blacklist into the Trie
-// // blacklist.blacklist.forEach(word => {
-// //   blacklistTrie.insert(word);
-// // });
-// /*
-// function logTrie(root) {
-//   console.log(root);
-//   for (const key in root.children) {
-//     logTrie(root.children[key]);
-//   }
-// }
-// logTrie(trie.root); */
-
-const ballAnswers = [
-  "YEP kok ",
-  "Yes. Suske ",
-  "Lyuuuuuuuuuuuuuuuuuuu said yes.",
-  "bababababa = NODDERS",
-  "You may rely on deez nuts NODDERS .",
-  "As I see it, yes... Suske ",
-  "Most likely. meow",
-  "Outlook good. ChadJam ",
-  "Yes. Smadge ",
-  "Signs point to yes. Smadge ",
-  "Ask again later. PogO",
-  "Better not tell you now. Plotge ",
-  "Cannot predict now. So sorry natsuHehehehehe  ",
-  "Ask your father KEKWlaugh ",
-  "Ask your mom KEKWlaugh ",
-  "Don't count on it. NOPERS ",
-  "Outlook not so good. Smadge ",
-  "My sources say no. LUBBERS ",
-  "Very doubtful.",
-  " COPIUM ",
-  "I don't know... I only know that WE LOST LYUUUUUUUUUUUUU natsuWhyy natsuCryALot  natsuWhyy natsuCryALot  natsuWhyy natsuCryALot  ",
-  "Not everything is certain, but if there's one thing you can count on, it's that C_Killah will always be drunk.",
-  "KILLAH STOP ASKING ME QUESTIONS. NATSU HELP! natsuPanic ",
-];
-
-//const dataRaw = fs.readFileSync('Users.json');
-//const userMessages = JSON.parse(dataRaw);
-
-// function saveMessageToJson(username,message){
-//check if user is already inside json
-//call function formatMessage(message)
-//if message after deletion = empty array then do nothing
-
-//if it is:
-//https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes-
-//check if word was already sent before (if its inside json)
-//if doenst include the word
-//append new word into json file
-
-//if not:
-//then put message inside the file
-
-//   // const jsonMessage = {};
-//   // jsonMessage[username] = [words];
-
-//   // if (userMessages[username] === undefined) {
-//   //   userMessages[username] = [];
-//   // }
-
-//   // fs.writeFileSync('Users.json', JSON.stringify(jsonMessage));
-
-// }
-
-// function formatMessage3(message){
-//   const words = message.split(' ').slice(0, 5);
-// }
-
-//   //split the message = inside words
-//   //then check if the msg contains blaclisted words
-//   //delete the blacklist words
+// Connect mongoDB
+connect();
 
 const client = new tmi.client(options);
 client.connect().catch(console.error);
 
 client.on("connected", () => {
-  client.say(channel, "Bot connected");
+  client.say(channel, "catArrive");
 });
 
 //when someone cheer
 client.on("cheer", (channel, userstate, message) => {
-  bitsHandler(userstate);
+  bitsHandler(userstate.username, Number(userstate.bits));
 });
-
-function bitsHandler(user) {
-  if (cheeredBits[user] === undefined) {
-    cheeredBits[user] = user.bits;
-  } else {
-    cheeredBits[user] += user.bits;
-  }
-}
-
-function getRolls(user) {
-  return (gambaRolls = parseInt(cheeredBits[user] / 500));
-}
-
-function roll() {
-  commandInProcess = true; //Flag to not append users who havent rolled
-  client.say(
-    channel,
-    `@${user.username} 69 today? PauseChamp You rolled a... PauseChamp`
-  );
-  setTimeout(() => {
-    commandInProcess = false;
-    const roll = Math.floor(Math.random() * 1000) + 1; // generate a random number between 1 and 1000
-    if (roll === 69) {
-      return client.say(
-        channel,
-        `@${user.username} You rolled a 69... Oh no natsuPanic`
-      );
-    }
-
-    client.say(
-      channel,
-      `@${user.username} natsuLaughing better luck tomorrow nerd natsuHehehehehe you rolled a ${roll}!`
-    );
-  }, 1500);
-}
 
 client.on("message", (channel, user, message, self) => {
   //if message came from bot, we ignore
   if (self) return;
+  const { username } = user; // const username = user.username
 
-  //saveMessageToJson(user.username, message);
-
-  if (message.toLowerCase().startsWith("!lyu")) {
-    client.say(
-      channel,
-      `Lyu? A big cutie! AMAZING ARTIST give them some support - precious and adorable -> https://twitter.com/Lyuriv and https://www.twitch.tv/lyuriv`
-    );
-  }
-
-  if (message.toLowerCase().startsWith("!8ball")) {
-    client.say(
-      channel,
-      ballAnswers[Math.floor(Math.random() * ballAnswers.length)]
-    );
-  }
-  if (message.toLowerCase().startsWith("!cloud")) {
-    client.say(
-      channel,
-      `Cloud is big baka and we love them uwu go follow: https://twitch.tv/KrCloudVT`
-    );
-  }
-  if (message.toLowerCase().startsWith("!botcheck")) {
-    client.say(channel, `MrDestructoid 7 `);
-  }
-
-  if (message.toLowerCase().startsWith("!roll")) {
-    const rolls = getRolls(userstate); // Get the number of rolls
-
-    if (
-      usedCommand.has(user.username) &&
-      rolls <= 0 &&
-      user.username !== "natsubun"
-    ) {
-      return client.say(
+  switch (message) {
+    case "!lyu":
+      client.say(
         channel,
-        `${user.username}, you have no rolls left natsuLaughing `
+        `Lyu? A big cutie! AMAZING ARTIST give them some support - precious and adorable -> https://twitter.com/Lyuriv and https://www.twitch.tv/lyuriv`
+      );
+      return;
+    case "!8ball":
+      client.say(
+        channel,
+        ballAnswers[Math.floor(Math.random() * ballAnswers.length)]
+      );
+      return;
+    case "!cloud":
+      sendMessage(
+        `Cloud is big baka and we love them uwu go follow: https://twitch.tv/KrCloudVT`
+      );
+      return;
+    case "!botcheck":
+      sendMessage(`MrDestructoid 7 `);
+      return;
+    case "!rolls":
+      sendMessage(`You have ` + getExtraRolls(username) + ` rolls left`);
+      return;
+    case "!roll":
+      const extraRolls = getExtraRolls(username); // Get the number of rolls
+
+      if (
+        usedCommand.has(username) &&
+        extraRolls <= 0 &&
+        username !== "natsubun"
+      ) {
+        return sendMessage(
+          `${username}, you have no rolls left natsuLaughing `
+        );
+      }
+
+      if (extraRolls > 0) {
+        bitsHandler(username, -extraRollCost);
+        roll(username, rollRange / 2);
+        return;
+      }
+
+      usedCommand.add(username);
+      roll(username, rollRange);
+  }
+});
+
+function sendMessage(message) {
+  client.say(channel, message);
+}
+
+function bitsHandler(username, bits) {
+  updateBits(username, bits);
+}
+
+//controls the users who cheered  <<<<<<<<<<<<<<< ARRUMAR
+async function getExtraRolls(username) {
+  return parseInt((await getBits(username)) / extraRollCost);
+}
+
+function roll(username, roll_range) {
+  commandInProcess = true; //Flag to not append users who havent rolled
+  sendMessage(`@${username} 69 today? PauseChamp You rolled a... PauseChamp`);
+  setTimeout(() => {
+    commandInProcess = false;
+    const roll = Math.floor(Math.random() * roll_range) + 1; // generate a random number between 1 and 1000
+    if (roll === 69 || roll === 420) {
+      return sendMessage(
+        `@${username} You rolled a ${roll}... Oh no natsuPanic`
       );
     }
 
-    if (rolls > 0) {
-      bitsHandler({ user: userstate.user, bits: -500 });
-      roll();
-      return;
-    }
+    sendMessage(
+      `@${username} natsuLaughing better luck tomorrow nerd natsuHehehehehe you rolled a ${roll}!`
+    );
+  }, 1500);
+}
 
-    usedCommand.add(user.username);
-    roll();
-  }
+//detects when i press control C to stop the bot
+process.on("SIGINT", () => {
+  sendMessage(`cya nerds peepoLeaveFinger`);
+  process.exit();
 });
