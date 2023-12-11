@@ -1,11 +1,10 @@
-const tmi = require("tmi.js"),
-  { channel, username } = require("./settings.json");
+const tmi = require("tmi.js");
 const ballAnswers = require("./ballAnswers");
 const { connect, updateBits, getBits } = require("./server");
+const channel = process.env.TWITCH_CHANNEL;
 
 const markovChain = {};
 let commandInProcess = false;
-
 const usedCommand = new Set();
 const extraRollCost = 1000;
 const rollRange = 1000;
@@ -18,7 +17,7 @@ const options = {
   },
   identity: {
     username: `${process.env.TWITCH_USERNAME}`,
-    passsowrd: `${process.env.TWITCH_TOKEN}`,
+    password: `${process.env.TWITCH_TOKEN}`,
   },
   channels: [channel],
 };
@@ -42,31 +41,36 @@ client.on("message", (channel, user, message, self) => {
   //if message came from bot, we ignore
   if (self) return;
   const { username } = user; // const username = user.username
+  const [command, ...args] = message.split(" ");
 
-  switch (message) {
+  switch (command) {
     case "!lyu":
       client.say(
         channel,
         `Lyu? A big cutie! AMAZING ARTIST give them some support - precious and adorable -> https://twitter.com/Lyuriv and https://www.twitch.tv/lyuriv`
       );
-      return;
+      break;
     case "!8ball":
       client.say(
         channel,
         ballAnswers[Math.floor(Math.random() * ballAnswers.length)]
       );
-      return;
+      break;
     case "!cloud":
-      sendMessage(
+      client.say(
+        channel,
         `Cloud is big baka and we love them uwu go follow: https://twitch.tv/KrCloudVT`
       );
-      return;
+      break;
     case "!botcheck":
-      sendMessage(`MrDestructoid 7 `);
-      return;
+      client.say(channel, `MrDestructoid 7 `);
+      break;
     case "!rolls":
-      sendMessage(`You have ` + getExtraRolls(username) + ` rolls left`);
-      return;
+      client.say(
+        channel,
+        `You have ` + getExtraRolls(username) + ` rolls left`
+      );
+      break;
     case "!roll":
       const extraRolls = getExtraRolls(username); // Get the number of rolls
 
@@ -75,7 +79,8 @@ client.on("message", (channel, user, message, self) => {
         extraRolls <= 0 &&
         username !== "natsubun"
       ) {
-        return sendMessage(
+        return client.say(
+          channel,
           `${username}, you have no rolls left natsuLaughing `
         );
       }
@@ -83,17 +88,13 @@ client.on("message", (channel, user, message, self) => {
       if (extraRolls > 0) {
         bitsHandler(username, -extraRollCost);
         roll(username, rollRange / 2);
-        return;
+        break;
       }
 
       usedCommand.add(username);
       roll(username, rollRange);
   }
 });
-
-function sendMessage(message) {
-  client.say(channel, message);
-}
 
 function bitsHandler(username, bits) {
   updateBits(username, bits);
@@ -106,17 +107,22 @@ async function getExtraRolls(username) {
 
 function roll(username, roll_range) {
   commandInProcess = true; //Flag to not append users who havent rolled
-  sendMessage(`@${username} 69 today? PauseChamp You rolled a... PauseChamp`);
+  client.say(
+    channel,
+    `@${username} 69 today? PauseChamp You rolled a... PauseChamp`
+  );
   setTimeout(() => {
     commandInProcess = false;
     const roll = Math.floor(Math.random() * roll_range) + 1; // generate a random number between 1 and 1000
     if (roll === 69 || roll === 420) {
-      return sendMessage(
+      return client.say(
+        channel,
         `@${username} You rolled a ${roll}... Oh no natsuPanic`
       );
     }
 
-    sendMessage(
+    client.say(
+      channel,
       `@${username} natsuLaughing better luck tomorrow nerd natsuHehehehehe you rolled a ${roll}!`
     );
   }, 1500);
@@ -124,6 +130,6 @@ function roll(username, roll_range) {
 
 //detects when i press control C to stop the bot
 process.on("SIGINT", () => {
-  sendMessage(`cya nerds peepoLeaveFinger`);
+  client.say(channel, `cya nerds peepoLeaveFinger`);
   process.exit();
 });

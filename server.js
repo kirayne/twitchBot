@@ -1,12 +1,12 @@
 const mongoose = require("mongoose");
 
-const User = mongoose.model("users", userSchema);
-
 // Schematic bro to save inside database bro
 const userSchema = new mongoose.Schema({
   username: String,
   bits: Number,
 });
+
+const User = mongoose.model("users", userSchema);
 
 async function connect() {
   try {
