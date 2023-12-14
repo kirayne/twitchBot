@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model("users", userSchema);
 
-async function connect() {
+async function connectToDB() {
   try {
     await mongoose.connect(process.env.MONGODB_URL);
     console.log("Connected");
@@ -30,20 +30,24 @@ async function getUser(username) {
 
 async function getBits(username) {
   try {
-    let user = await getUser(username);
-    if (!user) return;
-
-    return user.bits;
+    const user = await getUser(username);
+    if (user) {
+      return user.bits;
+    }
+    return 0; // Thats if user doesnt exist return 0
   } catch (error) {
     console.log(error);
+    return 0; // if error = 0
   }
 }
 
 async function updateBits(username, bitsToAdd) {
+  console.log("taaqui");
   try {
     let user = await getUser(username);
     if (!user) {
-      user = new User({ username, bits: 0 });
+      user = new User({ username, bits: bitsToAdd });
+      console.log("taaqui2");
     }
     user.bits += bitsToAdd;
 
@@ -53,4 +57,4 @@ async function updateBits(username, bitsToAdd) {
   }
 }
 
-module.exports = { connect, getUser, updateBits, getBits };
+module.exports = { connectToDB, getUser, updateBits, getBits };

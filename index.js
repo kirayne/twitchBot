@@ -1,12 +1,12 @@
 const tmi = require("tmi.js");
 const ballAnswers = require("./ballAnswers");
-const { connect, updateBits, getBits } = require("./server");
+const { connect, updateBits, getBits, connectToDB } = require("./server");
 const channel = process.env.TWITCH_CHANNEL;
 
 const markovChain = {};
 let commandInProcess = false;
 const usedCommand = new Set();
-const extraRollCost = 1000;
+const extraRollCost = 1;
 const rollRange = 1000;
 
 const options = {
@@ -23,7 +23,7 @@ const options = {
 };
 
 // Connect mongoDB
-connect();
+connectToDB();
 
 const client = new tmi.client(options);
 client.connect().catch(console.error);
@@ -37,7 +37,7 @@ client.on("cheer", (channel, userstate, message) => {
   bitsHandler(userstate.username, Number(userstate.bits));
 });
 
-client.on("message", (channel, user, message, self) => {
+client.on("message", async (channel, user, message, self) => {
   //if message came from bot, we ignore
   if (self) return;
   const { username } = user; // const username = user.username
@@ -49,6 +49,11 @@ client.on("message", (channel, user, message, self) => {
         channel,
         `Lyu? A big cutie! AMAZING ARTIST give them some support - precious and adorable -> https://twitter.com/Lyuriv and https://www.twitch.tv/lyuriv`
       );
+      break;
+    case "!reset": //reset the free rolls
+      if (username === "natsubun") {
+        usedCommand.clear();
+      }
       break;
     case "!8ball":
       client.say(
@@ -68,11 +73,12 @@ client.on("message", (channel, user, message, self) => {
     case "!rolls":
       client.say(
         channel,
-        `You have ` + getExtraRolls(username) + ` rolls left`
+        `You have ` + (await getExtraRolls(username)) + ` rolls left`
       );
       break;
     case "!roll":
-      const extraRolls = getExtraRolls(username); // Get the number of rolls
+      const extraRolls = await getExtraRolls(username); // Get the number of rolls
+      console.log(extraRolls); // dsadasdsasa
 
       if (
         usedCommand.has(username) &&
@@ -84,14 +90,14 @@ client.on("message", (channel, user, message, self) => {
           `${username}, you have no rolls left natsuLaughing `
         );
       }
-
       if (extraRolls > 0) {
         bitsHandler(username, -extraRollCost);
+        console.log(getBits(username.bits));
         roll(username, rollRange / 2);
-        break;
+        return;
       }
-
       usedCommand.add(username);
+      console.log(usedCommand);
       roll(username, rollRange);
   }
 });
@@ -114,7 +120,7 @@ function roll(username, roll_range) {
   setTimeout(() => {
     commandInProcess = false;
     const roll = Math.floor(Math.random() * roll_range) + 1; // generate a random number between 1 and 1000
-    if (roll === 69 || roll === 420) {
+    if (roll === 69 || roll === 420 || roll === 666) {
       return client.say(
         channel,
         `@${username} You rolled a ${roll}... Oh no natsuPanic`
