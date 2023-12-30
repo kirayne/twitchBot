@@ -23,4 +23,4 @@ const ballAnswers = [
   "Not everything is certain, but if there's one thing you can count on, it's that C_Killah will always be drunk.",
   "KILLAH STOP ASKING ME QUESTIONS. NATSU HELP! natsuPanic ",
 ];
-module.exports = ballAnswers;
+export default ballAnswers;

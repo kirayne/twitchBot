@@ -1,6 +1,6 @@
-const tmi = require("tmi.js");
-const ballAnswers = require("./ballAnswers");
-const { connect, updateBits, getBits, connectToDB } = require("./server");
+import * as tmi from "tmi.js";
+import ballAnswers from "./ballAnswers.js";
+import { User, updateBits, getBits, connectToDB } from "./server.js";
 const channel = process.env.TWITCH_CHANNEL;
 
 const markovChain = {};
@@ -22,26 +22,25 @@ const options = {
   channels: [channel],
 };
 
-// Connect mongoDB
-connectToDB();
+await connectToDB(); // Connect mongoDB
 
 const client = new tmi.client(options);
-client.connect().catch(console.error);
+client.connect().catch(console.error); // Connect to Twitch
 
 client.on("connected", () => {
   client.say(channel, "catArrive");
 });
 
-//when someone cheer
+// When someone cheer
 client.on("cheer", (channel, userstate, message) => {
-  bitsHandler(userstate.username, Number(userstate.bits));
+  updateBits(userstate.username, Number(userstate.bits));
 });
 
 client.on("message", async (channel, user, message, self) => {
-  //if message came from bot, we ignore
+  // If message came from bot, we ignore
   if (self) return;
   const { username } = user; // const username = user.username
-  const [command, ...args] = message.split(" ");
+  const [command, ...args] = message.toLowerCase().split(" ");
 
   switch (command) {
     case "!lyu":
@@ -50,7 +49,7 @@ client.on("message", async (channel, user, message, self) => {
         `Lyu? A big cutie! AMAZING ARTIST give them some support - precious and adorable -> https://twitter.com/Lyuriv and https://www.twitch.tv/lyuriv`
       );
       break;
-    case "!reset": //reset the free rolls
+    case "!reset": // Reset the free rolls
       if (username === "natsubun") {
         usedCommand.clear();
       }
@@ -78,7 +77,6 @@ client.on("message", async (channel, user, message, self) => {
       break;
     case "!roll":
       const extraRolls = await getExtraRolls(username); // Get the number of rolls
-      console.log(extraRolls); // dsadasdsasa
 
       if (
         usedCommand.has(username) &&
@@ -91,7 +89,7 @@ client.on("message", async (channel, user, message, self) => {
         );
       }
       if (extraRolls > 0) {
-        bitsHandler(username, -extraRollCost);
+        updateBits(username, -extraRollCost);
         console.log(getBits(username.bits));
         roll(username, rollRange / 2);
         return;
@@ -102,24 +100,20 @@ client.on("message", async (channel, user, message, self) => {
   }
 });
 
-function bitsHandler(username, bits) {
-  updateBits(username, bits);
-}
-
-//controls the users who cheered  <<<<<<<<<<<<<<< ARRUMAR
+// Controls the users who cheered
 async function getExtraRolls(username) {
   return parseInt((await getBits(username)) / extraRollCost);
 }
 
 function roll(username, roll_range) {
-  commandInProcess = true; //Flag to not append users who havent rolled
+  commandInProcess = true; // Flag to not append users who havent rolled
   client.say(
     channel,
     `@${username} 69 today? PauseChamp You rolled a... PauseChamp`
   );
   setTimeout(() => {
     commandInProcess = false;
-    const roll = Math.floor(Math.random() * roll_range) + 1; // generate a random number between 1 and 1000
+    const roll = Math.floor(Math.random() * roll_range) + 1; // Generate a random number between 1 and 1000
     if (roll === 69 || roll === 420 || roll === 666) {
       return client.say(
         channel,
@@ -134,7 +128,7 @@ function roll(username, roll_range) {
   }, 1500);
 }
 
-//detects when i press control C to stop the bot
+// Detects when I press control C to stop the bot
 process.on("SIGINT", () => {
   client.say(channel, `cya nerds peepoLeaveFinger`);
   process.exit();
