@@ -72,7 +72,7 @@ client.on("message", async (channel, user, message, self) => {
     case "!rolls":
       client.say(
         channel,
-        `You have ` + (await getExtraRolls(username)) + ` rolls left`
+        `You have ` + (await getExtraRolls(username)) + ` p2w roll(s) left`
       );
       break;
     case "!roll":

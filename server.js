@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-// Schematic bro to save inside database bro
+// Bits
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true },
   bits: { type: Number, required: true, default: 0 },
@@ -47,7 +47,7 @@ async function updateBits(username, bitsToAdd) {
   try {
     let user = await getUser(username);
     if (!user) {
-      user = new User({ username, bits: bitsToAdd });
+      user = new User({ username, bits: 0 });
     }
     user.bits += bitsToAdd;
 
