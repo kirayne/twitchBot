@@ -6,7 +6,7 @@ const channel = process.env.TWITCH_CHANNEL;
 const markovChain = {};
 let commandInProcess = false;
 const usedCommand = new Set();
-const extraRollCost = 1;
+const extraRollCost = 1000;
 const rollRange = 1000;
 
 const options = {
@@ -28,7 +28,7 @@ const client = new tmi.client(options);
 client.connect().catch(console.error); // Connect to Twitch
 
 client.on("connected", () => {
-  client.say(channel, "catArrive");
+  console.log("client connected");
 });
 
 // When someone cheer
@@ -69,11 +69,16 @@ client.on("message", async (channel, user, message, self) => {
     case "!botcheck":
       client.say(channel, `MrDestructoid 7 `);
       break;
+    // case "!pausetits":
+    //   pauseReedems();
     case "!rolls":
       client.say(
         channel,
         `You have ` + (await getExtraRolls(username)) + ` p2w roll(s) left`
       );
+      break;
+    case "!dead":
+      client.say(channel, `Streamer (Dead) PopCorn natsu3Hehehe`);
       break;
     case "!roll":
       const extraRolls = await getExtraRolls(username); // Get the number of rolls

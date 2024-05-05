@@ -2,42 +2,13 @@ Markov:
     Salvar as primeiras 3-5 palavras somente
     limpar uma vez por mês
 
-Organizar os arquivos:
-    - twitchBot/
-  - node_modules/
-  - commands/
-    - 8ball.js
-    - cloud.js
-    - botcheck.js
-    - lyu.js
-  - data/
-    - blacklist.json
-  - utils/
-    - trie.js
-  - index.js
-  - settings.json
-  - package-lock.json
-  - package.json
-
-Busca de blacklisted words:
-    Implementar trie
-
+Organizar os arquivos -> Done
+Busca de blacklisted words, Implementar trie -> done
 
 Fazer um trigger de sound alert
 
-Fazer % de amor etc
+Fazer % de amor etc 
 
-all you need to do is put em into a tuple/object
+Arrumar startsWith -> Done
 
-with the startsWith part and the corresponding response
-
-and run that in a loop along with startsWith uwu
-then when you have a new case
-just add a new object to the initial array 💪
-keeps it clean, not as many if statements, etc. :maiaElmo:
-
-switch(true) {
-  case message.toLowerCase().startsWith("pay"): // if this is true, the case matches
-    console.log(message);
-    break;
-}
+>> Adicionar um comando de pausar redeems <<
